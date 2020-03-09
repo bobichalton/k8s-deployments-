@@ -16,8 +16,9 @@ spec:
     spec:
       volumes:
       - name: data
-        persistentVolumeClaim:
-          claimName: minio-pv-claim
+        nfs:
+          server: 10.108.211.244 # Change this!
+          path: /
       containers:
       - name: minio
         volumeMounts:
