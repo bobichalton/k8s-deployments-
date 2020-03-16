@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1  
+kind: Ingress  
+metadata:  
+  name: jenkins-ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:  
+  rules:
+  - host: jenkins.35.205.122.35.nip.io
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: jenkins-http-service
+          servicePort: 80
