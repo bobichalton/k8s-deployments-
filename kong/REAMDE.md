@@ -1,0 +1,1 @@
+helm template kong kong/kong --dry-run --values values.yaml > test.yaml
