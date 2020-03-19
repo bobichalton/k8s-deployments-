@@ -1,0 +1,67 @@
+# Source: gitlab/charts/minio/templates/ingress.yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: gitlab-minio
+  namespace: default
+  labels:
+    app: minio
+    chart: minio-0.4.3
+    release: gitlab
+    heritage: Helm
+    
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  rules:
+    - host: minio.ithub.space
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: gitlab-minio-svc
+              servicePort: 9000
+  tls:
+    - hosts:
+      - minio.ithub.space
+      secretName: gitlab-minio-tls
+---
+# Source: gitlab/charts/registry/templates/ingress.yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: gitlab-registry
+  namespace: default
+  labels:
+    app: registry
+    chart: registry-0.4.0
+    release: gitlab
+    heritage: Helm
+    
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  rules:
+    - host: registry.ithub.space
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: gitlab-registry
+              servicePort: 5000
+  tls:
+    - hosts:
+      - registry.ithub.space
+      secretName: gitlab-registry-tls
