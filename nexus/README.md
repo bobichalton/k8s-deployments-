@@ -1,0 +1,1 @@
+Contraseña del usuario admin en el pod /nexus-data/admin.password
