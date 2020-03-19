@@ -1,0 +1,23 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  chart: traefik
+  repo: https://helm-tests.s3.eu-west-2.amazonaws.com/traefik-v1/charts/
+  version: 1.83.0
+  targetNamespace: kube-system
+  set:
+    rbac.enabled: "true"
+    ssl.enabled: "true"
+    ssl.enforced: "true"
+    kubernetes.ingressEndpoint.useDefaultPublishedService: "true"
+    dashboard.enabled: "true"
+    dashboard.domain: "ithub.space"
+    imageTag: "1.7.20"
+    acme.enabled: "true"
+    acme.email: "ruben.naredomartinez@gmail.com"
+    acme.logging: "true"
+    acme.persistence.enabled: "true"
+    acme.staging: "false"
