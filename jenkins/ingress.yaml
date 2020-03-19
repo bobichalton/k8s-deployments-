@@ -3,13 +3,19 @@ kind: Ingress
 metadata:  
   name: jenkins-ingress
   annotations:
-    kubernetes.io/ingress.class: traefik
+    kubernetes.io/ingress.class: "traefik"
+    ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:  
   rules:
-  - host: jenkins.35.205.122.35.nip.io
+  - host: jenkins.ithub.space
     http:
       paths:
       - path: /
         backend:
           serviceName: jenkins-http-service
           servicePort: 80
+  tls:
+  - hosts:
+    - jenkins.ithub.space
+    secretName: jenkins-ithub-space-prod-tls

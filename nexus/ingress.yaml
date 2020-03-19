@@ -1,15 +1,21 @@
-apiVersion: extensions/v1beta1  
-kind: Ingress  
-metadata:  
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
   name: nexus-ingress
   annotations:
-    kubernetes.io/ingress.class: traefik
-spec:  
+    kubernetes.io/ingress.class: "traefik"
+    ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
   rules:
-  - host: nexus.35.205.122.35.nip.io
+  - host: nexus.ithub.space
     http:
       paths:
       - path: /
         backend:
           serviceName: nexus-service
           servicePort: 80
+  tls:
+  - hosts:
+    - nexus.ithub.space
+    secretName: nexus-ithub-space-tls
