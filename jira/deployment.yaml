@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: jira
+  name: jira
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jira
+  template:
+    metadata:
+      labels:
+        app: jira
+    spec:
+      containers:
+        - name: jira
+          image: atlassian/jira-software:8.4.3
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1024Mi
+            limits:
+              cpu: 2000m
+              memory: 2048Mi
+          volumeMounts:
+          - mountPath: "/var/atlassian/application-data/jira"
+            name: jira-data
+          env:
+          - name: "ATL_PROXY_NAME"
+            value: "jira.ithub.space"
+          - name: "ATL_PROXY_PORT"
+            value: "443"
+          - name: "ATL_TOMCAT_SCHEME"
+            value: "https"
+          - name: "ATL_TOMCAT_SECURE"
+            value: "true"
+          - name: "ATL_DB_DRIVER"
+            value: "org.postgresql.Driver"
+          - name: "ATL_DB_TYPE"
+            value: "postgres72"
+          - name: "ATL_DB_SCHEMA_NAME"
+            value: "public"
+          - name: "ATL_JDBC_URL"
+            value: "jdbc:postgresql://postgres-jira-service/jira"
+          - name: "ATL_JDBC_USER"
+            value: "jira"
+          - name: "ATL_JDBC_PASSWORD"
+            value: "@OyWz~dRJq1IJ1iuHZjn"
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+      volumes:
+      - name: jira-data
+        persistentVolumeClaim:
+          claimName: jira-pvc
