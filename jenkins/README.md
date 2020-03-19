@@ -1,0 +1,1 @@
+Contraseña inicial en: $JENKINS_HOME/secrets/initialAdminPassword
