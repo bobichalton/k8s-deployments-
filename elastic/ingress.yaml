@@ -1,0 +1,21 @@
+apiVersion: extensions/v1beta1  
+kind: Ingress  
+metadata:  
+  name: kibana-ingress
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:  
+  rules:
+  - host: kibana.ithub.space
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: elastic-kb-http
+          servicePort: 5601
+  tls:
+  - hosts:
+    - kibana.ithub.space
+    secretName: kibana-ithub-space-prod-tls
