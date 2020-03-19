@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-sonar
+  labels:
+    app: postgres-sonar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-sonar
+  template:
+    metadata:
+      labels:
+        app: postgres-sonar
+    spec:
+      containers:
+        - name: postgres-sonar
+          image: postgres:9.6.17
+          resources:
+            requests:
+              cpu: 256m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2048Mi
+          ports:
+          - containerPort: 5432
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgresdb
+          env:
+          - name: "POSTGRES_DB"
+            value: "sonar"
+          - name: "POSTGRES_USER"
+            value: "sonar"
+          - name: "POSTGRES_PASSWORD"
+            value: "rl:i1ViCHvrz2Mv]~Hy"
+      volumes:
+        - name: postgresdb
+          persistentVolumeClaim:
+            claimName: postgres-sonar-pvc
