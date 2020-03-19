@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-jira
+  labels:
+    app: postgres-jira
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-jira
+  template:
+    metadata:
+      labels:
+        app: postgres-jira
+    spec:
+      containers:
+        - name: postgres-jira
+          image: postgres:9.6.17
+          resources:
+            requests:
+              cpu: 256m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2048Mi
+          ports:
+          - containerPort: 5432
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgresdb
+          env:
+          - name: "POSTGRES_DB"
+            value: "jira"
+          - name: "POSTGRES_USER"
+            value: "jira"
+          - name: "POSTGRES_PASSWORD"
+            value: "@OyWz~dRJq1IJ1iuHZjn"
+      volumes:
+        - name: postgresdb
+          persistentVolumeClaim:
+            claimName: postgres-jira-pvc
