@@ -1,0 +1,22 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod    
+  name: airbus-front-ingress
+  namespace: default
+spec:
+  rules:
+  - host: controlpanel.ithub.space
+    http:
+      paths:
+      - backend:
+          serviceName: airbus-front-service
+          servicePort: 80
+        path: /
+  tls:
+  - hosts:
+    - controlpanel.ithub.space
+    secretName: controlpanel-ithub-space-prod-tls
