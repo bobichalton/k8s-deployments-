@@ -6,6 +6,9 @@ metadata:
     kubernetes.io/ingress.class: "traefik"
     ingress.kubernetes.io/ssl-redirect: "true"
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    ingress.kubernetes.io/hsts-include-subdomains: "true"
+    ingress.kubernetes.io/hsts-max-age: "315360000"
+    ingress.kubernetes.io/hsts-preload: "true"
 spec:
   rules:
   - host: konga.ithub.space
