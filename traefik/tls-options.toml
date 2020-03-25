@@ -1,0 +1,2 @@
+[entryPoints.https.tls]
+  minVersion = "VersionTLS12"
