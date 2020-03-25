@@ -1,0 +1,9 @@
+mirrors:
+  "nexus.ithub.space:443":
+     endpoint:
+       - "https://nexus.ithub.com"
+configs:
+  "nexus.ithub.space:443":
+    auth:
+      username: usuario # sustituir por las credenciales correctas
+      password: contrañesa
