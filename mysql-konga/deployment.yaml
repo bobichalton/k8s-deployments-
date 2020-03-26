@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: mysql-konga
-          image: mysql:8.0.19
+          image: mysql:5.7.29
           resources: {}
           ports:
           - containerPort: 3306

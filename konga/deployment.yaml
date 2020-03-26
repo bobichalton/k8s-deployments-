@@ -19,3 +19,19 @@ spec:
         image: pantsel/konga
         ports:
         - containerPort: 1337
+        resources: {}
+        env:
+          - name: "DB_ADAPTER"
+            value: "mysql"
+          - name: "DB_HOST"
+            value: "mysql-konga-service.default.svc"
+          - name: "DB_PORT"
+            value: "3306"
+          - name: "DB_DATABASE"
+            value: "konga"
+          - name: "DB_USER"
+            value: "konga"
+          - name: "DB_PASSWORD"
+            value: "0xxEs299BJU3tNS7ZDEL"
+          - name: "NODE_ENV"
+            value: "production"
