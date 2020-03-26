@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-konga
+  labels:
+    app: mysql-konga
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-konga
+  template:
+    metadata:
+      labels:
+        app: mysql-konga
+    spec:
+      containers:
+        - name: mysql-konga
+          image: mysql:8.0.19
+          resources: {}
+          ports:
+          - containerPort: 3306
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: mysqldb
+          env:
+          - name: "MYSQL_DATABASE"
+            value: "konga"
+          - name: "MYSQL_USER"
+            value: "konga"
+          - name: "MYSQL_PASSWORD"
+            value: "0xxEs299BJU3tNS7ZDEL"
+          - name: "MYSQL_ROOT_PASSWORD"
+            value: "0xxEs299BJU3tNS7ZDEL"
+      volumes:
+        - name: mysqldb
+          persistentVolumeClaim:
+            claimName: mysql-konga-pvc
