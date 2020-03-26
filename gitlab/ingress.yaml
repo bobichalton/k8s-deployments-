@@ -21,7 +21,7 @@ metadata:
     ingress.kubernetes.io/hsts-include-subdomains: "true"
     ingress.kubernetes.io/hsts-max-age: "315360000"
     ingress.kubernetes.io/hsts-preload: "true"
-    ingress.kubernetes.io/custom-response-headers: "X-Frame-Options:DENY"
+    ingress.kubernetes.io/custom-response-headers: "X-Frame-Options:DENY||Access‐Control‐Allow‐Origin:minio.ithub.space"
 spec:
   rules:
     - host: minio.ithub.space
@@ -59,6 +59,7 @@ metadata:
     ingress.kubernetes.io/hsts-include-subdomains: "true"
     ingress.kubernetes.io/hsts-max-age: "315360000"
     ingress.kubernetes.io/hsts-preload: "true"
+    ingress.kubernetes.io/custom-response-headers: "server:Custom"
 spec:
   rules:
     - host: registry.ithub.space

@@ -9,6 +9,7 @@ metadata:
     ingress.kubernetes.io/hsts-include-subdomains: "true"
     ingress.kubernetes.io/hsts-max-age: "315360000"
     ingress.kubernetes.io/hsts-preload: "true"
+    ingress.kubernetes.io/custom-response-headers: "server:Custom"
 spec:
   rules:
   - host: api.ithub.space
