@@ -6,16 +6,20 @@ metadata:
   name: kong-service
 spec:
   ports:
-    - port: 8000
+    - name: proxy-http
+      port: 8000
       protocol: TCP
       targetPort: 8000
-    - port: 8001
+    - name: admin-http
+      port: 8001
       protocol: TCP
       targetPort: 8001
-    - port: 8443
+    - name: proxy-https
+      port: 8443
       protocol: TCP
       targetPort: 8443
-    - port: 8444
+    - name: admin-https
+      port: 8444
       protocol: TCP
       targetPort: 8444
   selector:

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: konga-ddbb-init
+  labels:
+    purpose: konga-ddbb-init
+spec:
+  containers:
+  - name: konga-ddbb-init-container
+    image: pantsel/konga
+    command: ["node"]
+    args: ["./bin/konga.js", "prepare", "--adapter", "postgres", "--uri", "postgresql://kong:IOTkl45H7yZrOo3dwYh7@postgres-kong-service.default.svc:5432/konga"]
+    resources: {}
+  restartPolicy: OnFailure

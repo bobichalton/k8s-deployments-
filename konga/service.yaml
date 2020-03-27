@@ -3,12 +3,11 @@ kind: Service
 metadata:
   name: konga-service
 spec:
-  type: NodePort
+  type: ClusterIP
   ports:
   - name: kong-proxy
     port: 1337
     targetPort: 1337
-    nodePort: 30337
     protocol: TCP
   selector:
     app: konga

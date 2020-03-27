@@ -21,17 +21,11 @@ spec:
         - containerPort: 1337
         resources: {}
         env:
-          - name: "DB_ADAPTER"
-            value: "mysql"
-          - name: "DB_HOST"
-            value: "mysql-konga-service.default.svc"
-          - name: "DB_PORT"
-            value: "3306"
-          - name: "DB_DATABASE"
-            value: "konga"
-          - name: "DB_USER"
-            value: "konga"
-          - name: "DB_PASSWORD"
-            value: "0xxEs299BJU3tNS7ZDEL"
+          - name: "POOL_SIZE"
+            value: "10"
+          - name: "KONGA_HOOK_TIMEOUT"
+            value: "120000"
+          - name: "DB_URI"
+            value: "postgresql://kong:IOTkl45H7yZrOo3dwYh7@postgres-kong-service.default.svc:5432/konga"
           - name: "NODE_ENV"
             value: "production"
