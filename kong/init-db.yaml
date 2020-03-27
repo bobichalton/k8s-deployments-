@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kong-ddbb-init
+  labels:
+    purpose: kong-ddbb-init
+spec:
+  containers:
+  - name: kong-ddbb-init-container
+    image: kong:latest
+    command: ["kong"]
+    args: ["migrations", "bootstrap"]
+    env:
+    - name: "KONG_PG_HOST"
+      value: "postgres-kong-service.default.svc"
+    - name: "KONG_CASSANDRA_CONTACT_POINTS"
+      value: "postgres-kong-service"
+    - name: "KONG_PG_USER"
+      value: "kong"
+    - name: "KONG_PG_PASSWORD"
+      value: "IOTkl45H7yZrOo3dwYh7"
+    - name: "KONG_PG_PORT"
+      value: "5432"
+    resources: {}
+  restartPolicy: OnFailure
