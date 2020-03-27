@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: jira
-          image: atlassian/jira-software:8.4.3
+          image: atlassian/jira-software:8.7.1
           resources:
             requests:
               cpu: 500m
@@ -43,11 +43,11 @@ spec:
           - name: "ATL_DB_SCHEMA_NAME"
             value: "public"
           - name: "ATL_JDBC_URL"
-            value: "jdbc:postgresql://postgres-jira-service/jira"
+            value: "jdbc:postgresql://postgres-jira-service/jirasurgeondb"
           - name: "ATL_JDBC_USER"
-            value: "jira"
+            value: "jirasurgeonuser"
           - name: "ATL_JDBC_PASSWORD"
-            value: "@OyWz~dRJq1IJ1iuHZjn"
+            value: "jira"
           ports:
           - containerPort: 8080
             protocol: TCP

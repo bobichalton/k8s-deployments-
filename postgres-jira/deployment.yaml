@@ -17,13 +17,6 @@ spec:
       containers:
         - name: postgres-jira
           image: postgres:9.6.17
-          resources:
-            requests:
-              cpu: 256m
-              memory: 512Mi
-            limits:
-              cpu: 2000m
-              memory: 2048Mi
           ports:
           - containerPort: 5432
           volumeMounts:
@@ -31,11 +24,11 @@ spec:
               name: postgresdb
           env:
           - name: "POSTGRES_DB"
-            value: "jira"
+            value: "jirasurgeondb"
           - name: "POSTGRES_USER"
-            value: "jira"
+            value: "jirasurgeonuser"
           - name: "POSTGRES_PASSWORD"
-            value: "@OyWz~dRJq1IJ1iuHZjn"
+            value: "jira"
       volumes:
         - name: postgresdb
           persistentVolumeClaim:
