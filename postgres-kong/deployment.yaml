@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-kong
+  labels:
+    app: postgres-kong
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-kong
+  template:
+    metadata:
+      labels:
+        app: postgres-kong
+    spec:
+      containers:
+        - name: postgres-kong
+          image: postgres:9.6.17
+          resources:
+            requests:
+              cpu: 256m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2048Mi
+          ports:
+          - containerPort: 5432
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgresdb
+          env:
+          - name: "POSTGRES_DB"
+            value: "kong"
+          - name: "POSTGRES_USER"
+            value: "kong"
+          - name: "POSTGRES_PASSWORD"
+            value: "IOTkl45H7yZrOo3dwYh7"
+      volumes:
+        - name: postgresdb
+          persistentVolumeClaim:
+            claimName: postgres-kong-pvc
