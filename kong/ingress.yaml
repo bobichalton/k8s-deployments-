@@ -17,8 +17,8 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: kong-kong-proxy 
-          servicePort: 80
+          serviceName: kong-service
+          servicePort: 8000
   tls:
   - hosts:
     - api.ithub.space

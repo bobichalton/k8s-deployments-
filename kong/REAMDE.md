@@ -1,1 +1,1 @@
-helm template kong kong/kong --dry-run --values values.yaml > kong.yaml
+Primero init-db.yaml para poder conectar la BBDD
