@@ -17,21 +17,6 @@ spec:
       containers:
         - name: kong
           image: kong:latest
-          livenessProbe:
-            exec:
-              command:
-              - kong
-              - health
-            initialDelaySeconds: 10
-            failureThreshold: 3
-            periodSeconds: 10
-          resources:
-            requests:
-              cpu: 256m
-              memory: 512Mi
-            limits:
-              cpu: 2000m
-              memory: 2048Mi
           ports:
           - containerPort: 8000
           - containerPort: 8443
