@@ -7,7 +7,7 @@ metadata:
   namespace: default
   labels:
     app: gitaly
-    chart: gitaly-3.1.5
+    chart: gitaly-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -26,7 +26,7 @@ metadata:
   namespace: default
   labels:
     app: gitlab-shell
-    chart: gitlab-shell-3.1.5
+    chart: gitlab-shell-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -45,7 +45,7 @@ metadata:
   namespace: default
   labels:
     app: sidekiq
-    chart: sidekiq-3.1.5
+    chart: sidekiq-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -64,7 +64,7 @@ metadata:
   namespace: default
   labels:
     app: unicorn
-    chart: unicorn-3.1.5
+    chart: unicorn-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -103,7 +103,7 @@ metadata:
   namespace: default
   labels:
     app: registry
-    chart: registry-0.4.0
+    chart: registry-0.5.0
     release: gitlab
     heritage: Helm
     
@@ -114,62 +114,6 @@ spec:
       app: registry
       release: gitlab
 ---
-# Source: gitlab/charts/certmanager-issuer/templates/cert-manager.yml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gitlab-certmanager-issuer-certmanager
-  namespace: default
-  labels:
-    app: certmanager-issuer
-    chart: certmanager-issuer-0.1.0
-    release: gitlab
-    heritage: Helm
-    
-data:
-  create-issuer: |
-    #!/bin/bash
-    set -e ;
-    
-    issuer_file=$1
-    namespace=default
-    
-    echo "Creating the certmanager issuer..."
-    set +e ; # The CRD may not exist yet. We need to retry until this passes
-    while ! kubectl --namespace=$namespace apply -f ${issuer_file:=issuer.yml}; do
-      sleep 1;
-    done ;
-    set -e ; # reset `e` as active
-    
-  issuer.yml: |
-    
-    apiVersion: certmanager.k8s.io/v1alpha1
-    kind: Issuer
-    metadata:
-      name: gitlab-issuer
-      namespace: default
-      labels:
-        app: certmanager-issuer
-        chart: certmanager-issuer-0.1.0
-        release: gitlab
-        heritage: Helm
-        
-    spec:
-      acme:
-        # The ACME server URL
-        server: "https://acme-v02.api.letsencrypt.org/directory"
-        # Email address used for ACME registration
-        email: "ruben.naredomartinez@altran.com"
-        # Name of a secret used to store the ACME account private key
-        privateKeySecretRef:
-          name: gitlab-acme-key
-        # Enable the HTTP-01 challenge provider
-        solvers:
-        - selector: {}
-          http01:
-            ingress:
-              class: gitlab-nginx
----
 # Source: gitlab/charts/gitlab-runner/templates/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -177,7 +121,7 @@ metadata:
   name: gitlab-gitlab-runner
   labels:
     app: gitlab-gitlab-runner
-    chart: gitlab-runner-0.14.0
+    chart: gitlab-runner-0.15.0
     release: "gitlab"
     heritage: "Helm"
 data:
@@ -267,7 +211,7 @@ metadata:
   namespace: default
   labels:
     app: gitaly
-    chart: gitaly-3.1.5
+    chart: gitaly-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -357,7 +301,7 @@ metadata:
   namespace: default
   labels:
     app: gitlab-exporter
-    chart: gitlab-exporter-3.1.5
+    chart: gitlab-exporter-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -435,7 +379,7 @@ metadata:
   namespace: default
   labels:
     app: gitlab-shell
-    chart: gitlab-shell-3.1.5
+    chart: gitlab-shell-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -593,7 +537,7 @@ metadata:
   namespace: default
   labels:
     app: gitlab-shell
-    chart: gitlab-shell-3.1.5
+    chart: gitlab-shell-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -660,7 +604,7 @@ metadata:
   namespace: default
   labels:
     app: gitlab-shell
-    chart: gitlab-shell-3.1.5
+    chart: gitlab-shell-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -675,7 +619,7 @@ metadata:
   namespace: default
   labels:
     app: migrations
-    chart: migrations-3.1.5
+    chart: migrations-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -703,6 +647,7 @@ data:
   gitlab.yml.erb: |
     production: &base
       gitlab:
+        host: gitlab.ithub.space
       gitaly:
         client_path: /home/git/gitaly/bin
         token: "<%= File.read('/etc/gitlab/gitaly/gitaly_token').strip.dump[1..-2] %>"
@@ -741,7 +686,7 @@ metadata:
   namespace: default
   labels:
     app: sidekiq
-    chart: sidekiq-3.1.5
+    chart: sidekiq-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -765,7 +710,7 @@ metadata:
   namespace: default
   labels:
     app: sidekiq
-    chart: sidekiq-3.1.5
+    chart: sidekiq-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -789,7 +734,21 @@ data:
       #     - host2.example.com
       
   smtp_settings.rb: |
+    Rails.application.config.action_mailer.delivery_method = :smtp
     
+    ActionMailer::Base.delivery_method = :smtp
+    ActionMailer::Base.smtp_settings = {
+      address: "in-v3.mailjet.com",
+      port: 587,
+      ca_file: "/etc/ssl/certs/ca-certificates.crt",
+      domain: "in-v3.mailjet.com",
+      
+      authentication: :login,
+      user_name: "47968d33689c2e3d2089e3ad32cf569d",
+      password: File.read("/etc/gitlab/smtp/smtp-password").strip,
+      enable_starttls_auto: true,
+      openssl_verify_mode: 'peer'
+    }
   resque.yml.erb: |
     production:
       # Redis (single instance)
@@ -1007,7 +966,7 @@ metadata:
   namespace: default
   labels:
     app: task-runner
-    chart: task-runner-3.1.5
+    chart: task-runner-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -1025,7 +984,21 @@ data:
       prepared_statements: false
       
   smtp_settings.rb: |
+    Rails.application.config.action_mailer.delivery_method = :smtp
     
+    ActionMailer::Base.delivery_method = :smtp
+    ActionMailer::Base.smtp_settings = {
+      address: "in-v3.mailjet.com",
+      port: 587,
+      ca_file: "/etc/ssl/certs/ca-certificates.crt",
+      domain: "in-v3.mailjet.com",
+      
+      authentication: :login,
+      user_name: "47968d33689c2e3d2089e3ad32cf569d",
+      password: File.read("/etc/gitlab/smtp/smtp-password").strip,
+      enable_starttls_auto: true,
+      openssl_verify_mode: 'peer'
+    }
   resque.yml.erb: |
     production:
       # Redis (single instance)
@@ -1265,7 +1238,7 @@ metadata:
   namespace: default
   labels:
     app: unicorn
-    chart: unicorn-3.1.5
+    chart: unicorn-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -1292,7 +1265,7 @@ metadata:
   namespace: default
   labels:
     app: unicorn
-    chart: unicorn-3.1.5
+    chart: unicorn-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -1316,7 +1289,21 @@ data:
       #     - host2.example.com
       
   smtp_settings.rb: |
+    Rails.application.config.action_mailer.delivery_method = :smtp
     
+    ActionMailer::Base.delivery_method = :smtp
+    ActionMailer::Base.smtp_settings = {
+      address: "in-v3.mailjet.com",
+      port: 587,
+      ca_file: "/etc/ssl/certs/ca-certificates.crt",
+      domain: "in-v3.mailjet.com",
+      
+      authentication: :login,
+      user_name: "47968d33689c2e3d2089e3ad32cf569d",
+      password: File.read("/etc/gitlab/smtp/smtp-password").strip,
+      enable_starttls_auto: true,
+      openssl_verify_mode: 'peer'
+    }
   resque.yml.erb: |
     production:
       # Redis (single instance)
@@ -1389,9 +1376,87 @@ data:
       # server.listen(addr, :tries => -1, :delay => 5, :tcp_nopush => true)
     end
 
-    ENV['GITLAB_UNICORN_MEMORY_MIN'] = (700 * 1 << 20).to_s
-    ENV['GITLAB_UNICORN_MEMORY_MAX'] = (1024 * 1 << 20).to_s
+    ENV['GITLAB_UNICORN_MEMORY_MIN'] = (1024 * 1 << 20).to_s
+    ENV['GITLAB_UNICORN_MEMORY_MAX'] = (1280 * 1 << 20).to_s
+  puma.rb: |
+    # This file should be equivalent to `puma.rb` from:
+    # * gitlab-foss: https://gitlab.com/gitlab-org/gitlab-foss/blob/master/config/puma.rb.example
+    # * omnibus: https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/files/gitlab-cookbooks/gitlab/templates/default/puma.rb.erb
+    # frozen_string_literal: true
 
+    pidfile "/home/git/puma.pid"
+    state_path "/home/git/puma.pid"
+
+    stdout_redirect '/srv/gitlab/log/puma.stdout.log',
+      '/srv/gitlab/log/puma.stderr.log',
+      true
+
+    # Configure "min" to be the minimum number of threads to use to answer
+    # requests and "max" the maximum.
+    threads 4, 4
+
+    # By default, workers accept all requests and queue them to pass to handlers.
+    # When false, workers accept the number of simultaneous requests configured.
+    #
+    # Queueing requests generally improves performance, but can cause deadlocks if
+    # the app is waiting on a request to itself. See https://github.com/puma/puma/issues/612
+    #
+    # When set to false this may require a reverse proxy to handle slow clients and
+    # queue requests before they reach puma. This is due to disabling HTTP keepalive
+    queue_requests false
+
+    # Bind the server to "url". "tcp://", "unix://" and "ssl://" are the only
+    # accepted protocols.
+    bind 'tcp://0.0.0.0:8080'
+
+    directory "/srv/gitlab"
+
+    workers 2
+
+    require_relative "/srv/gitlab/lib/gitlab/cluster/lifecycle_events"
+    require_relative "/srv/gitlab/lib/gitlab/cluster/puma_worker_killer_initializer"
+
+    on_restart do
+      # Signal application hooks that we're about to restart
+      Gitlab::Cluster::LifecycleEvents.do_before_master_restart
+    end
+
+    options = { workers: 2 }
+
+    before_fork do
+      # Signal to the puma killer
+      Gitlab::Cluster::PumaWorkerKillerInitializer.start(options, puma_per_worker_max_memory_mb: 1024)
+
+      # Signal application hooks that we're about to fork
+      Gitlab::Cluster::LifecycleEvents.do_before_fork
+    end
+
+    Gitlab::Cluster::LifecycleEvents.set_puma_options options
+    on_worker_boot do
+      # Signal application hooks of worker start
+      Gitlab::Cluster::LifecycleEvents.do_worker_start
+    end
+
+    # Preload the application before starting the workers; this conflicts with
+    # phased restart feature. (off by default)
+
+    preload_app!
+
+    tag 'gitlab-puma-worker'
+
+    # Verifies that all workers have checked in to the master process within
+    # the given timeout. If not the worker process will be restarted. Default
+    # value is 60 seconds.
+    #
+    worker_timeout 60
+
+    # Use customised JSON formatter for Puma log
+    require_relative "/srv/gitlab/lib/gitlab/puma_logging/json_formatter"
+
+    json_formatter = Gitlab::PumaLogging::JSONFormatter.new
+    log_formatter do |str|
+        json_formatter.call(str)
+    end
   gitlab.yml.erb: |
     production: &base
       gitlab:
@@ -1841,199 +1906,6 @@ data:
     }
 # Blank line to signal end of Block
 ---
-# Source: gitlab/charts/prometheus/templates/server-configmap.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  labels:
-    component: "server"
-    app: prometheus
-    release: gitlab
-    chart: prometheus-10.0.0
-    heritage: Helm
-  name: gitlab-prometheus-server
-data:
-  alerting_rules.yml: |
-    {}
-  alerts: |
-    {}
-  prometheus.yml: |
-    global:
-      evaluation_interval: 1m
-      scrape_interval: 1m
-      scrape_timeout: 10s
-    rule_files:
-    - /etc/config/recording_rules.yml
-    - /etc/config/alerting_rules.yml
-    - /etc/config/rules
-    - /etc/config/alerts
-    scrape_configs:
-    - job_name: prometheus
-      static_configs:
-      - targets:
-        - localhost:9090
-    - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-      job_name: kubernetes-apiservers
-      kubernetes_sd_configs:
-      - role: endpoints
-      relabel_configs:
-      - action: keep
-        regex: default;kubernetes;https
-        source_labels:
-        - __meta_kubernetes_namespace
-        - __meta_kubernetes_service_name
-        - __meta_kubernetes_endpoint_port_name
-      scheme: https
-      tls_config:
-        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-        insecure_skip_verify: true
-    - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-      job_name: kubernetes-nodes
-      kubernetes_sd_configs:
-      - role: node
-      relabel_configs:
-      - action: labelmap
-        regex: __meta_kubernetes_node_label_(.+)
-      - replacement: kubernetes.default.svc:443
-        target_label: __address__
-      - regex: (.+)
-        replacement: /api/v1/nodes/$1/proxy/metrics
-        source_labels:
-        - __meta_kubernetes_node_name
-        target_label: __metrics_path__
-      scheme: https
-      tls_config:
-        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-        insecure_skip_verify: true
-    - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-      job_name: kubernetes-nodes-cadvisor
-      kubernetes_sd_configs:
-      - role: node
-      relabel_configs:
-      - action: labelmap
-        regex: __meta_kubernetes_node_label_(.+)
-      - replacement: kubernetes.default.svc:443
-        target_label: __address__
-      - regex: (.+)
-        replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
-        source_labels:
-        - __meta_kubernetes_node_name
-        target_label: __metrics_path__
-      scheme: https
-      tls_config:
-        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-        insecure_skip_verify: true
-    - job_name: kubernetes-service-endpoints
-      kubernetes_sd_configs:
-      - role: endpoints
-      relabel_configs:
-      - action: keep
-        regex: true
-        source_labels:
-        - __meta_kubernetes_service_annotation_prometheus_io_scrape
-      - action: replace
-        regex: (https?)
-        source_labels:
-        - __meta_kubernetes_service_annotation_prometheus_io_scheme
-        target_label: __scheme__
-      - action: replace
-        regex: (.+)
-        source_labels:
-        - __meta_kubernetes_service_annotation_prometheus_io_path
-        target_label: __metrics_path__
-      - action: replace
-        regex: ([^:]+)(?::\d+)?;(\d+)
-        replacement: $1:$2
-        source_labels:
-        - __address__
-        - __meta_kubernetes_service_annotation_prometheus_io_port
-        target_label: __address__
-      - action: labelmap
-        regex: __meta_kubernetes_service_label_(.+)
-      - action: replace
-        source_labels:
-        - __meta_kubernetes_namespace
-        target_label: kubernetes_namespace
-      - action: replace
-        source_labels:
-        - __meta_kubernetes_service_name
-        target_label: kubernetes_name
-      - action: replace
-        source_labels:
-        - __meta_kubernetes_pod_node_name
-        target_label: kubernetes_node
-    - honor_labels: true
-      job_name: prometheus-pushgateway
-      kubernetes_sd_configs:
-      - role: service
-      relabel_configs:
-      - action: keep
-        regex: pushgateway
-        source_labels:
-        - __meta_kubernetes_service_annotation_prometheus_io_probe
-    - job_name: kubernetes-services
-      kubernetes_sd_configs:
-      - role: service
-      metrics_path: /probe
-      params:
-        module:
-        - http_2xx
-      relabel_configs:
-      - action: keep
-        regex: true
-        source_labels:
-        - __meta_kubernetes_service_annotation_prometheus_io_probe
-      - source_labels:
-        - __address__
-        target_label: __param_target
-      - replacement: blackbox
-        target_label: __address__
-      - source_labels:
-        - __param_target
-        target_label: instance
-      - action: labelmap
-        regex: __meta_kubernetes_service_label_(.+)
-      - source_labels:
-        - __meta_kubernetes_namespace
-        target_label: kubernetes_namespace
-      - source_labels:
-        - __meta_kubernetes_service_name
-        target_label: kubernetes_name
-    - job_name: kubernetes-pods
-      kubernetes_sd_configs:
-      - role: pod
-      relabel_configs:
-      - action: keep
-        regex: true
-        source_labels:
-        - __meta_kubernetes_pod_annotation_prometheus_io_scrape
-      - action: replace
-        regex: (.+)
-        source_labels:
-        - __meta_kubernetes_pod_annotation_prometheus_io_path
-        target_label: __metrics_path__
-      - action: replace
-        regex: ([^:]+)(?::\d+)?;(\d+)
-        replacement: $1:$2
-        source_labels:
-        - __address__
-        - __meta_kubernetes_pod_annotation_prometheus_io_port
-        target_label: __address__
-      - action: labelmap
-        regex: __meta_kubernetes_pod_label_(.+)
-      - action: replace
-        source_labels:
-        - __meta_kubernetes_namespace
-        target_label: kubernetes_namespace
-      - action: replace
-        source_labels:
-        - __meta_kubernetes_pod_name
-        target_label: kubernetes_pod_name
-  recording_rules.yml: |
-    {}
-  rules: |
-    {}
----
 # Source: gitlab/charts/redis/templates/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -2153,7 +2025,7 @@ metadata:
   namespace: default
   labels:
     app: registry
-    chart: registry-0.4.0
+    chart: registry-0.5.0
     release: gitlab
     heritage: Helm
     
@@ -2252,13 +2124,13 @@ metadata:
   namespace: default
   labels:
     app: gitlab
-    chart: gitlab-3.1.5
+    chart: gitlab-3.2.1
     release: gitlab
     heritage: Helm
     
 data:
-  gitlabVersion: "12.8.7"
-  gitlabChartVersion: "3.1.5"
+  gitlabVersion: "12.9.1"
+  gitlabChartVersion: "3.2.1"
 ---
 # Source: gitlab/templates/initdb-configmap.yaml
 apiVersion: v1
@@ -2268,7 +2140,7 @@ metadata:
   namespace: default
   labels:
     app: gitlab
-    chart: gitlab-3.1.5
+    chart: gitlab-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -2297,39 +2169,6 @@ spec:
       storage: "10Gi"
   selector:
 ---
-# Source: gitlab/charts/prometheus/templates/server-pvc.yaml
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  labels:
-    component: "server"
-    app: prometheus
-    release: gitlab
-    chart: prometheus-10.0.0
-    heritage: Helm
-  name: gitlab-prometheus-server
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: "8Gi"
----
-# Source: gitlab/charts/certmanager-issuer/templates/rbac-config.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: gitlab-certmanager-issuer
-  namespace: default
-  labels:
-    app: certmanager-issuer
-    chart: certmanager-issuer-0.1.0
-    release: gitlab
-    heritage: Helm
-    
-  annotations:
-    namespace: default
----
 # Source: gitlab/charts/gitlab-runner/templates/service-account.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -2337,93 +2176,9 @@ metadata:
   name: gitlab-gitlab-runner
   labels:
     app: gitlab-gitlab-runner
-    chart: gitlab-runner-0.14.0
+    chart: gitlab-runner-0.15.0
     release: "gitlab"
     heritage: "Helm"
----
-# Source: gitlab/charts/prometheus/templates/server-serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    component: "server"
-    app: prometheus
-    release: gitlab
-    chart: prometheus-10.0.0
-    heritage: Helm
-  name: gitlab-prometheus-server
----
-# Source: gitlab/charts/prometheus/templates/server-clusterrole.yaml
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  labels:
-    component: "server"
-    app: prometheus
-    release: gitlab
-    chart: prometheus-10.0.0
-    heritage: Helm
-  name: gitlab-prometheus-server
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - nodes
-      - nodes/proxy
-      - nodes/metrics
-      - services
-      - endpoints
-      - pods
-      - ingresses
-      - configmaps
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - "extensions"
-    resources:
-      - ingresses/status
-      - ingresses
-    verbs:
-      - get
-      - list
-      - watch
-  - nonResourceURLs:
-      - "/metrics"
-    verbs:
-      - get
----
-# Source: gitlab/charts/prometheus/templates/server-clusterrolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    component: "server"
-    app: prometheus
-    release: gitlab
-    chart: prometheus-10.0.0
-    heritage: Helm
-  name: gitlab-prometheus-server
-subjects:
-  - kind: ServiceAccount
-    name: gitlab-prometheus-server
-    namespace: default
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: gitlab-prometheus-server
----
-# Source: gitlab/charts/certmanager-issuer/templates/rbac-config.yaml
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: gitlab-certmanager-issuer
-  namespace: default
-rules:
-- apiGroups: ["certmanager.k8s.io"]
-  resources: ["issuers"]
-  verbs: ["get", "list", "update", "create", "patch"]
 ---
 # Source: gitlab/charts/gitlab-runner/templates/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2432,33 +2187,13 @@ metadata:
   name: gitlab-gitlab-runner
   labels:
     app: gitlab-gitlab-runner
-    chart: gitlab-runner-0.14.0
+    chart: gitlab-runner-0.15.0
     release: "gitlab"
     heritage: "Helm"
 rules:
 - apiGroups: [""]
   resources: ["*"]
   verbs: ["*"]
----
-# Source: gitlab/charts/certmanager-issuer/templates/rbac-config.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: gitlab-certmanager-issuer
-  namespace: default
-  labels:
-    app: certmanager-issuer
-    chart: certmanager-issuer-0.1.0
-    release: gitlab
-    heritage: Helm
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: gitlab-certmanager-issuer
-subjects:
-  - kind: ServiceAccount
-    name: gitlab-certmanager-issuer
-    namespace: default
 ---
 # Source: gitlab/charts/gitlab-runner/templates/role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2467,7 +2202,7 @@ metadata:
   name: gitlab-gitlab-runner
   labels:
     app: gitlab-gitlab-runner
-    chart: gitlab-runner-0.14.0
+    chart: gitlab-runner-0.15.0
     release: "gitlab"
     heritage: "Helm"
 roleRef:
@@ -2487,7 +2222,7 @@ metadata:
   namespace: default
   labels:
     app: gitaly
-    chart: gitaly-3.1.5
+    chart: gitaly-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -2516,7 +2251,7 @@ metadata:
   namespace: default
   labels:
     app: gitlab-exporter
-    chart: gitlab-exporter-3.1.5
+    chart: gitlab-exporter-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -2541,7 +2276,7 @@ metadata:
   namespace: default
   labels:
     app: gitlab-shell
-    chart: gitlab-shell-3.1.5
+    chart: gitlab-shell-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -2566,7 +2301,7 @@ metadata:
   namespace: default
   labels:
     app: unicorn
-    chart: unicorn-3.1.5
+    chart: unicorn-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -2679,30 +2414,6 @@ spec:
     release: "gitlab"
     role: master
 ---
-# Source: gitlab/charts/prometheus/templates/server-service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    component: "server"
-    app: prometheus
-    release: gitlab
-    chart: prometheus-10.0.0
-    heritage: Helm
-  name: gitlab-prometheus-server
-spec:
-  ports:
-    - name: http
-      port: 80
-      protocol: TCP
-      targetPort: 9090
-  selector:
-    component: "server"
-    app: prometheus
-    release: gitlab
-  sessionAffinity: None
-  type: "ClusterIP"
----
 # Source: gitlab/charts/redis/templates/headless-svc.yaml
 apiVersion: v1
 kind: Service
@@ -2773,7 +2484,7 @@ metadata:
   namespace: default
   labels:
     app: registry
-    chart: registry-0.4.0
+    chart: registry-0.5.0
     release: gitlab
     heritage: Helm
     
@@ -2797,7 +2508,7 @@ metadata:
   name: gitlab-gitlab-runner
   labels:
     app: gitlab-gitlab-runner
-    chart: gitlab-runner-0.14.0
+    chart: gitlab-runner-0.15.0
     release: "gitlab"
     heritage: "Helm"
 spec:
@@ -2809,11 +2520,11 @@ spec:
     metadata:
       labels:
         app: gitlab-gitlab-runner
-        chart: gitlab-runner-0.14.0
+        chart: gitlab-runner-0.15.0
         release: "gitlab"
         heritage: "Helm"
       annotations:
-        checksum/configmap: 7120e766c4a5d77d8624b127253adfa7fce2840f160258e3257b5281445ce3f7
+        checksum/configmap: 2244e0f888b6a61f23b6a61cd30aa625157966bda312240a044e1bd07342f72b
         checksum/secrets: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
         prometheus.io/scrape: 'true'
         prometheus.io/port: '9252'
@@ -2825,7 +2536,7 @@ spec:
       initContainers:
       - name: configure
         command: ['sh', '/config/configure']
-        image: gitlab/gitlab-runner:alpine-v12.8.0
+        image: gitlab/gitlab-runner:alpine-v12.9.0
         imagePullPolicy: "IfNotPresent"
         env:
                 
@@ -2907,7 +2618,7 @@ spec:
       serviceAccountName: gitlab-gitlab-runner
       containers:
       - name: gitlab-gitlab-runner
-        image: gitlab/gitlab-runner:alpine-v12.8.0
+        image: gitlab/gitlab-runner:alpine-v12.9.0
         imagePullPolicy: "IfNotPresent"
         command: ["/bin/bash", "/scripts/entrypoint"]
         env:
@@ -3034,7 +2745,7 @@ metadata:
   namespace: default
   labels:
     app: gitlab-exporter
-    chart: gitlab-exporter-3.1.5
+    chart: gitlab-exporter-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -3050,7 +2761,7 @@ spec:
         app: gitlab-exporter
         release: gitlab
       annotations:
-        checksum/config: 83e2e4532640eb9203a672536a137755b72e8c67aa141afe2fe1df1e5fb441c8
+        checksum/config: f759228b6637161d870cf04b9eb72d5dee02049e350184bfe6425ee1f49dc7c4
         prometheus.io/path: /metrics
         prometheus.io/port: "9168"
         prometheus.io/scrape: "true"
@@ -3078,6 +2789,9 @@ spec:
           - name: etc-ssl-certs
             mountPath: /etc/ssl/certs
             readOnly: false
+          - name: custom-ca-certificates
+            mountPath: /usr/local/share/ca-certificates
+            readOnly: true
           resources:
             requests:
               cpu: 50m
@@ -3103,7 +2817,7 @@ spec:
       containers:
         
         - name: gitlab-exporter
-          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-exporter:6.0.0"
+          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-exporter:6.1.0"
           
           env:
             - name: CONFIG_TEMPLATE_DIRECTORY
@@ -3171,6 +2885,12 @@ spec:
       - name: etc-ssl-certs
         emptyDir:
           medium: "Memory"
+      - name: custom-ca-certificates
+        projected:
+          defaultMode: 0400
+          sources:
+          - secret:
+              name: gitlab-wildcard-tls-ca
 ---
 # Source: gitlab/charts/gitlab/charts/gitlab-shell/templates/deployment.yaml
 apiVersion: apps/v1
@@ -3180,7 +2900,7 @@ metadata:
   namespace: default
   labels:
     app: gitlab-shell
-    chart: gitlab-shell-3.1.5
+    chart: gitlab-shell-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -3195,8 +2915,8 @@ spec:
         app: gitlab-shell
         release: gitlab
       annotations:
-        checksum/config: 27de0814b66c1147af78cc8041802085059a7b1d3a807b0d5fee9932ff1ccf98
-        checksum/config-sshd: 2dbac8487f42deef00222d556943ff23f45043feec9e2d84d7e64ad4ac8e8857
+        checksum/config: c57804820edb17d3198f97ec88e041c8c094c12a0a50a3383238cf7b2944621c
+        checksum/config-sshd: a60a97e98b3afeb5b312d6cc3a5dc6d93cc622c8e62110f983ac04cf2b00f1c1
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
     spec:
       initContainers:
@@ -3209,6 +2929,9 @@ spec:
           - name: etc-ssl-certs
             mountPath: /etc/ssl/certs
             readOnly: false
+          - name: custom-ca-certificates
+            mountPath: /usr/local/share/ca-certificates
+            readOnly: true
           resources:
             requests:
               cpu: 50m
@@ -3245,7 +2968,7 @@ spec:
       containers:
         
         - name: gitlab-shell
-          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-shell:v11.0.0"
+          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-shell:v12.0.0"
           
           ports:
             - containerPort: 2222
@@ -3322,6 +3045,12 @@ spec:
       - name: etc-ssl-certs
         emptyDir:
           medium: "Memory"
+      - name: custom-ca-certificates
+        projected:
+          defaultMode: 0400
+          sources:
+          - secret:
+              name: gitlab-wildcard-tls-ca
 ---
 # Source: gitlab/charts/gitlab/charts/sidekiq/templates/deployment.yaml
 apiVersion: apps/v1
@@ -3331,7 +3060,7 @@ metadata:
   namespace: default
   labels:
     app: sidekiq
-    chart: sidekiq-3.1.5
+    chart: sidekiq-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -3349,9 +3078,9 @@ spec:
         release: gitlab
         queue-pod-name: all-in-1
       annotations:
-        checksum/configmap: 8d19365a5fba6f3d0998d6157fe8611dae56c60a67de4eb11cab5357f37d0d21
+        checksum/configmap: eb174b1d844f823afa6f6791c21c2445ddcb0ed624aef13a1352a5c4615d41f6
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
-        checksum/configmap-pod: 7b1f1aa8eb64abbc06eb8b77197a039923992ac43b29b146096d7e80db37ceaf
+        checksum/configmap-pod: dc417dd76b0bbf22c9317ebc12528d2f51c6d3f3d4172d7cba27162faea0c009
         prometheus.io/port: "3807"
         prometheus.io/scrape: "true"
     spec:
@@ -3378,6 +3107,9 @@ spec:
           - name: etc-ssl-certs
             mountPath: /etc/ssl/certs
             readOnly: false
+          - name: custom-ca-certificates
+            mountPath: /usr/local/share/ca-certificates
+            readOnly: true
           resources:
             requests:
               cpu: 50m
@@ -3401,7 +3133,7 @@ spec:
             requests:
               cpu: 50m
         - name: dependencies
-          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-sidekiq-ce:v12.8.7"
+          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-sidekiq-ce:v12.9.1"
           
           args:
             - /scripts/wait-for-deps
@@ -3436,7 +3168,7 @@ spec:
       containers:
         
         - name: sidekiq
-          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-sidekiq-ce:v12.8.7"
+          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-sidekiq-ce:v12.9.1"
           
           env:
             - name: prometheus_multiproc_dir
@@ -3573,6 +3305,11 @@ spec:
           # mount secret for pseudonymizer
           # mount secrets for LDAP
           
+          - secret:
+              name: smtp-password
+              items:
+                - key: password
+                  path: smtp/smtp-password
       - name: sidekiq-secrets
         emptyDir:
           medium: "Memory"
@@ -3580,6 +3317,12 @@ spec:
       - name: etc-ssl-certs
         emptyDir:
           medium: "Memory"
+      - name: custom-ca-certificates
+        projected:
+          defaultMode: 0400
+          sources:
+          - secret:
+              name: gitlab-wildcard-tls-ca
 ---
 # Source: gitlab/charts/gitlab/charts/task-runner/templates/deployment.yaml
 apiVersion: apps/v1
@@ -3589,7 +3332,7 @@ metadata:
   namespace: default
   labels:
     app: task-runner
-    chart: task-runner-3.1.5
+    chart: task-runner-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -3608,7 +3351,7 @@ spec:
         app: task-runner
         release: gitlab
       annotations:
-        checksum/config: 056784344319b0c608b8175af71b3fb5f5b020d29fdb6e9d4918d13bfbb188f8
+        checksum/config: 9ad74c615540856c9e2b3e1549633f0cd8ee4b4abc0b5f53c38cc4fb69d4385c
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
     spec:
       securityContext:
@@ -3624,6 +3367,9 @@ spec:
           - name: etc-ssl-certs
             mountPath: /etc/ssl/certs
             readOnly: false
+          - name: custom-ca-certificates
+            mountPath: /usr/local/share/ca-certificates
+            readOnly: true
           resources:
             requests:
               cpu: 50m
@@ -3653,7 +3399,7 @@ spec:
             - /bin/bash
             - -c
             - cp -v -r -L /etc/gitlab/.s3cfg $HOME/.s3cfg && while sleep 3600; do :; done # alpine sleep has no infinity
-          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-task-runner-ce:v12.8.7"
+          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-task-runner-ce:v12.9.1"
           
           env:
             - name: ARTIFACTS_BUCKET_NAME
@@ -3764,6 +3510,11 @@ spec:
           # mount secret for pseudonymizer
           # mount secrets for LDAP
           
+          - secret:
+              name: smtp-password
+              items:
+                - key: password
+                  path: smtp/smtp-password
       - name: task-runner-secrets
         emptyDir:
           medium: "Memory"
@@ -3771,6 +3522,12 @@ spec:
       - name: etc-ssl-certs
         emptyDir:
           medium: "Memory"
+      - name: custom-ca-certificates
+        projected:
+          defaultMode: 0400
+          sources:
+          - secret:
+              name: gitlab-wildcard-tls-ca
 ---
 # Source: gitlab/charts/gitlab/charts/unicorn/templates/deployment.yaml
 apiVersion: apps/v1
@@ -3780,12 +3537,12 @@ metadata:
   namespace: default
   labels:
     app: unicorn
-    chart: unicorn-3.1.5
+    chart: unicorn-3.2.1
     release: gitlab
     heritage: Helm
     
 spec:
-  replicas: 
+  replicas: 1
   selector:
     matchLabels:
       app: unicorn
@@ -3796,7 +3553,7 @@ spec:
         app: unicorn
         release: gitlab
       annotations:
-        checksum/config: 1570210b34965b5a81732a11844068f4691d7e33bb72fcbfff053ab404322f93
+        checksum/config: 1c6717e548f00432b759d781ab645c79618090d4a4651978b452c8e630d1e50d
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
         prometheus.io/path: /-/metrics
         prometheus.io/port: "8080"
@@ -3825,6 +3582,9 @@ spec:
           - name: etc-ssl-certs
             mountPath: /etc/ssl/certs
             readOnly: false
+          - name: custom-ca-certificates
+            mountPath: /usr/local/share/ca-certificates
+            readOnly: true
           resources:
             requests:
               cpu: 50m
@@ -3858,7 +3618,7 @@ spec:
             requests:
               cpu: 50m
         - name: dependencies
-          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-unicorn-ce:v12.8.7"
+          image: registry.gitlab.com/gitlab-org/build/cng/gitlab-webservice-ce:v12.9.1
           
           args:
             - /scripts/wait-for-deps
@@ -3890,12 +3650,14 @@ spec:
       containers:
         
         - name: unicorn
-          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-unicorn-ce:v12.8.7"
+          image: registry.gitlab.com/gitlab-org/build/cng/gitlab-webservice-ce:v12.9.1
           
           ports:
             - containerPort: 8080
               name: unicorn
           env:
+            - name: GITLAB_WEBSERVER
+              value: unicorn
             - name: TMPDIR
               value: "/tmp/gitlab"
             - name: GITALY_FEATURE_DEFAULT_ON
@@ -3963,9 +3725,9 @@ spec:
           resources:
             requests:
               cpu: 300m
-              memory: 1.2G
+              memory: 1.5G
         - name: gitlab-workhorse
-          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-workhorse-ce:v12.8.7"
+          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-workhorse-ce:v12.9.1"
           
           ports:
             - containerPort: 8181
@@ -4091,6 +3853,11 @@ spec:
           # mount secret for external_diffs
           # mount secrets for LDAP
           
+          - secret:
+              name: smtp-password
+              items:
+                - key: password
+                  path: smtp/smtp-password
       - name: unicorn-secrets
         emptyDir:
           medium: "Memory"
@@ -4105,6 +3872,12 @@ spec:
       - name: etc-ssl-certs
         emptyDir:
           medium: "Memory"
+      - name: custom-ca-certificates
+        projected:
+          defaultMode: 0400
+          sources:
+          - secret:
+              name: gitlab-wildcard-tls-ca
 ---
 # Source: gitlab/charts/minio/templates/minio_deployment.yaml
 apiVersion: apps/v1
@@ -4200,98 +3973,6 @@ spec:
               cpu: 100m
               memory: 128Mi
 ---
-# Source: gitlab/charts/prometheus/templates/server-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    component: "server"
-    app: prometheus
-    release: gitlab
-    chart: prometheus-10.0.0
-    heritage: Helm
-  name: gitlab-prometheus-server
-spec:
-  selector:
-    matchLabels:
-      component: "server"
-      app: prometheus
-      release: gitlab
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        component: "server"
-        app: prometheus
-        release: gitlab
-        chart: prometheus-10.0.0
-        heritage: Helm
-    spec:
-      serviceAccountName: gitlab-prometheus-server
-      containers:
-        - name: prometheus-server-configmap-reload
-          image: "jimmidyson/configmap-reload:v0.3.0"
-          imagePullPolicy: "IfNotPresent"
-          args:
-            - --volume-dir=/etc/config
-            - --webhook-url=http://127.0.0.1:9090/-/reload
-          resources:
-            {}
-          volumeMounts:
-            - name: config-volume
-              mountPath: /etc/config
-              readOnly: true
-
-        - name: prometheus-server
-          image: "prom/prometheus:v2.15.2"
-          imagePullPolicy: "IfNotPresent"
-          args:
-            - --storage.tsdb.retention.time=15d
-            - --config.file=/etc/config/prometheus.yml
-            - --storage.tsdb.path=/data
-            - --web.console.libraries=/etc/prometheus/console_libraries
-            - --web.console.templates=/etc/prometheus/consoles
-            - --web.enable-lifecycle
-          ports:
-            - containerPort: 9090
-          readinessProbe:
-            httpGet:
-              path: /-/ready
-              port: 9090
-            initialDelaySeconds: 30
-            timeoutSeconds: 30
-            failureThreshold: 3
-            successThreshold: 1
-          livenessProbe:
-            httpGet:
-              path: /-/healthy
-              port: 9090
-            initialDelaySeconds: 30
-            timeoutSeconds: 30
-            failureThreshold: 3
-            successThreshold: 1
-          resources:
-            {}
-          volumeMounts:
-            - name: config-volume
-              mountPath: /etc/config
-            - name: storage-volume
-              mountPath: /data
-              subPath: ""
-      securityContext:
-        fsGroup: 65534
-        runAsGroup: 65534
-        runAsNonRoot: true
-        runAsUser: 65534
-      terminationGracePeriodSeconds: 300
-      volumes:
-        - name: config-volume
-          configMap:
-            name: gitlab-prometheus-server
-        - name: storage-volume
-          persistentVolumeClaim:
-            claimName: gitlab-prometheus-server
----
 # Source: gitlab/charts/registry/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -4300,7 +3981,7 @@ metadata:
   namespace: default
   labels:
     app: registry
-    chart: registry-0.4.0
+    chart: registry-0.5.0
     release: gitlab
     heritage: Helm
     
@@ -4318,7 +3999,7 @@ spec:
         app: registry
         release: gitlab
       annotations:
-        checksum/configmap: 139a65b34064d75de0e3a8340c123228c459b58d0f2a8aea0509a789a513d056
+        checksum/configmap: 8464cb554aa0604fcda4d60ac691776475fd7df18d3701628c8e0cfdb8256e00
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
     spec:
       securityContext:
@@ -4343,6 +4024,9 @@ spec:
           - name: etc-ssl-certs
             mountPath: /etc/ssl/certs
             readOnly: false
+          - name: custom-ca-certificates
+            mountPath: /usr/local/share/ca-certificates
+            readOnly: true
           resources:
             requests:
               cpu: 50m
@@ -4360,7 +4044,7 @@ spec:
               cpu: 50m      
       containers:
         - name: registry
-          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-container-registry:v2.8.1-gitlab"
+          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-container-registry:v2.8.2-gitlab"
           imagePullPolicy: "IfNotPresent"
           volumeMounts:
           - name: registry-server-config
@@ -4419,6 +4103,12 @@ spec:
       - name: etc-ssl-certs
         emptyDir:
           medium: "Memory"
+      - name: custom-ca-certificates
+        projected:
+          defaultMode: 0400
+          sources:
+          - secret:
+              name: gitlab-wildcard-tls-ca
 ---
 # Source: gitlab/charts/gitlab/charts/gitlab-shell/templates/hpa.yaml
 apiVersion: autoscaling/v2beta1
@@ -4428,7 +4118,7 @@ metadata:
   namespace: default
   labels:
     app: gitlab-shell
-    chart: gitlab-shell-3.1.5
+    chart: gitlab-shell-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -4453,7 +4143,7 @@ metadata:
   namespace: default
   labels:
     app: sidekiq
-    chart: sidekiq-3.1.5
+    chart: sidekiq-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -4478,7 +4168,7 @@ metadata:
   namespace: default
   labels:
     app: unicorn
-    chart: unicorn-3.1.5
+    chart: unicorn-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -4503,7 +4193,7 @@ metadata:
   namespace: default
   labels:
     app: registry
-    chart: registry-0.4.0
+    chart: registry-0.5.0
     release: gitlab
     heritage: Helm
     
@@ -4546,7 +4236,7 @@ spec:
         app: gitaly
         release: gitlab
       annotations:
-        checksum/config: 0ce83ffda66298ea6e0bd59bfb61c0e0ee0e245f873119b2134bee35a76707ee
+        checksum/config: 6ad83c46ccdfd6baf5a564f04b8298a2460b2406a2e0d15719ebb1427c6e81ec
     spec:
       terminationGracePeriodSeconds: 30
       initContainers:
@@ -4559,6 +4249,9 @@ spec:
           - name: etc-ssl-certs
             mountPath: /etc/ssl/certs
             readOnly: false
+          - name: custom-ca-certificates
+            mountPath: /usr/local/share/ca-certificates
+            readOnly: true
           resources:
             requests:
               cpu: 50m
@@ -4595,7 +4288,7 @@ spec:
       containers:
         
         - name: gitaly
-          image: "registry.gitlab.com/gitlab-org/build/cng/gitaly:v12.8.7"
+          image: "registry.gitlab.com/gitlab-org/build/cng/gitaly:v12.9.1"
           
           ports:
             - containerPort: 8075
@@ -4676,6 +4369,12 @@ spec:
       - name: etc-ssl-certs
         emptyDir:
           medium: "Memory"
+      - name: custom-ca-certificates
+        projected:
+          defaultMode: 0400
+          sources:
+          - secret:
+              name: gitlab-wildcard-tls-ca
   volumeClaimTemplates:
     - metadata:
         name: repo-data
@@ -5031,44 +4730,6 @@ spec:
   updateStrategy:
     type: RollingUpdate
 ---
-# Source: gitlab/charts/certmanager-issuer/templates/issuer-job.yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: gitlab-issuer.1
-  namespace: default
-  labels:
-    app: certmanager-issuer
-    chart: certmanager-issuer-0.1.0
-    release: gitlab
-    heritage: Helm
-    
-spec:
-  activeDeadlineSeconds: 300
-  template:
-    metadata:
-      labels:
-        app: certmanager-issuer
-        release: gitlab
-    spec:
-      serviceAccountName: gitlab-certmanager-issuer
-      restartPolicy: OnFailure      
-      containers:
-        - name: create-issuer
-          image: "registry.gitlab.com/gitlab-org/build/cng/kubectl:1.13.12"
-          command: ['/bin/bash', '/scripts/create-issuer', '/scripts/issuer.yml']
-          
-          volumeMounts:
-            - name: scripts
-              mountPath: /scripts
-          resources:
-            requests:
-              cpu: 50m
-      volumes:
-      - name: scripts
-        configMap:
-          name: gitlab-certmanager-issuer-certmanager
----
 # Source: gitlab/charts/gitlab/charts/migrations/templates/job.yaml
 apiVersion: batch/v1
 kind: Job
@@ -5077,7 +4738,7 @@ metadata:
   namespace: default
   labels:
     app: migrations
-    chart: migrations-3.1.5
+    chart: migrations-3.2.1
     release: gitlab
     heritage: Helm
     
@@ -5103,6 +4764,9 @@ spec:
           - name: etc-ssl-certs
             mountPath: /etc/ssl/certs
             readOnly: false
+          - name: custom-ca-certificates
+            mountPath: /usr/local/share/ca-certificates
+            readOnly: true
           resources:
             requests:
               cpu: 50m
@@ -5129,7 +4793,7 @@ spec:
       containers:
         
         - name: migrations
-          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-task-runner-ce:v12.8.7"
+          image: "registry.gitlab.com/gitlab-org/build/cng/gitlab-task-runner-ce:v12.9.1"
           args:
             - /scripts/wait-for-deps
             - /scripts/db-migrate
@@ -5211,6 +4875,12 @@ spec:
       - name: etc-ssl-certs
         emptyDir:
           medium: "Memory"
+      - name: custom-ca-certificates
+        projected:
+          defaultMode: 0400
+          sources:
+          - secret:
+              name: gitlab-wildcard-tls-ca
 ---
 # Source: gitlab/charts/minio/templates/create-buckets-job.yaml
 apiVersion: batch/v1
@@ -5278,6 +4948,10 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-buffering: "off"
     ingress.kubernetes.io/ssl-redirect: "true"
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    ingress.kubernetes.io/hsts-include-subdomains: "true"
+    ingress.kubernetes.io/hsts-max-age: "315360000"
+    ingress.kubernetes.io/hsts-preload: "true"
+    ingress.kubernetes.io/custom-response-headers: "X-Frame-Options:DENY||Access‐Control‐Allow‐Origin:minio.ithub.space"
 spec:
   rules:
     - host: minio.ithub.space
@@ -5290,7 +4964,7 @@ spec:
   tls:
     - hosts:
       - minio.ithub.space
-      secretName: gitlab-minio-tls
+      secretName: gitlab-minio-prod-tls
 ---
 # Source: gitlab/charts/registry/templates/ingress.yaml
 apiVersion: extensions/v1beta1
@@ -5312,6 +4986,10 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-buffering: "off"
     ingress.kubernetes.io/ssl-redirect: "true"
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    ingress.kubernetes.io/hsts-include-subdomains: "true"
+    ingress.kubernetes.io/hsts-max-age: "315360000"
+    ingress.kubernetes.io/hsts-preload: "true"
+    ingress.kubernetes.io/custom-response-headers: "server:Custom"
 spec:
   rules:
     - host: registry.ithub.space
@@ -5324,7 +5002,381 @@ spec:
   tls:
     - hosts:
       - registry.ithub.space
-      secretName: gitlab-registry-tls
+      secretName: gitlab-registry-prod-tls
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: gitlab-unicorn
+  namespace: default
+  labels:
+    app: unicorn
+    chart: unicorn-3.2.1
+    release: gitlab
+    heritage: Helm
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    ingress.kubernetes.io/hsts-preload: "true"
+spec:
+  rules:
+    - host: gitlab.ithub.space
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: gitlab-unicorn
+              servicePort: 8181
+          - path: /admin/sidekiq
+            backend:
+              serviceName: gitlab-unicorn
+              servicePort: 8080
+  tls:
+    - hosts:
+      - gitlab.ithub.space
+      secretName: gitlab-unicorn-prod-tls
+---
+# Source: gitlab/templates/upgrade_check_hook.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitlab-gitlab-upgrade-check
+  namespace: default
+  labels:
+    app: gitlab
+    chart: gitlab-3.2.1
+    release: gitlab
+    heritage: Helm
+    
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "-11"
+    "helm.sh/hook-delete-policy": before-hook-creation
+data:
+  runcheck: |
+    #!/bin/sh
+    
+    set -e
+    
+    notify() {
+      echo "$1"
+      echo -n "$1 " >> /dev/termination-log
+    }
+    
+    greater_version()
+    {
+      test "$(printf '%s\n' "$@" | sort -V | tail -n 1)" = "$1";
+    }
+    
+    # For the PostgreSQL upgrade, you either need both secrets, or no secrets.
+    # If there are no secrets, we will create them for you.
+    # If the secrets aren't in either of these states, we assume you are upgrading from an older version
+    # This is running ahead of version checks to ensure this always runs. This is to account for
+    # installations outside of the official helm repo.
+    secrets_dir="/etc/secrets/postgresql"
+    if [ -d "${secrets_dir}" ]; then
+      if [ ! "$(ls -A ${secrets_dir}/..data/)" = "" ]; then
+        if [ ! -f "${secrets_dir}/postgresql-postgres-password" ] || [ ! -f "${secrets_dir}/postgresql-password" ]; then
+          notify "You seem to be upgrading from a previous version of GitLab using the bundled PostgreSQL chart"
+          notify "There are some manual steps which need to be performed in order to upgrade the database"
+          notify "Please see the upgrade documentation for instructions on how to proceed:"
+          notify "https://docs.gitlab.com/charts/installation/upgrade.html"
+          exit 1
+        fi
+      fi
+    fi
+    MIN_VERSION=12.6
+    CHART_MIN_VERSION=2.6
+    
+    # Only run check for semver releases
+    if ! awk 'BEGIN{exit(!(ARGV[1] ~ /^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/))}' "$GITLAB_VERSION"; then
+      exit 0
+    fi
+    
+    NEW_MAJOR_VERSION=$(echo $GITLAB_VERSION | awk -F "." '{print $1}')
+    NEW_MINOR_VERSION=$(echo $GITLAB_VERSION | awk -F "." '{print $1"."$2}')
+    
+    NEW_CHART_MAJOR_VERSION=$(echo $CHART_VERSION | awk -F "." '{print $1}')
+    NEW_CHART_MINOR_VERSION=$(echo $CHART_VERSION | awk -F "." '{print $1"."$2}')
+    
+    if [ ! -f /chart-info/gitlabVersion ]; then
+      notify "It seems you are attempting an unsupported upgrade path."
+      notify "Please follow the upgrade documentation at https://docs.gitlab.com/ee/policy/maintenance.html#upgrade-recommendations"
+      exit 1
+    fi
+    
+    OLD_VERSION_STRING=$(cat /chart-info/gitlabVersion)
+    OLD_CHART_VERSION_STRING=$(cat /chart-info/gitlabChartVersion)
+    
+    # Skip check if old version wasn't semver
+    if ! awk 'BEGIN{exit(!(ARGV[1] ~ /^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/))}' "$OLD_VERSION_STRING"; then
+      exit 0
+    fi
+    
+    OLD_MAJOR_VERSION=$(echo $OLD_VERSION_STRING | awk -F "." '{print $1}')
+    OLD_MINOR_VERSION=$(echo $OLD_VERSION_STRING | awk -F "." '{print $1"."$2}')
+    OLD_CHART_MAJOR_VERSION=$(echo $OLD_CHART_VERSION_STRING | awk -F "." '{print $1}')
+    OLD_CHART_MINOR_VERSION=$(echo $OLD_CHART_VERSION_STRING | awk -F "." '{print $1"."$2}')
+    
+    # Checking Version
+    # (i) if it is a major version jump
+    # (ii) if existing version is less than required minimum version
+    if [ ${OLD_MAJOR_VERSION} -lt ${NEW_MAJOR_VERSION} ] || [ ${OLD_CHART_MAJOR_VERSION} -lt ${NEW_CHART_MAJOR_VERSION} ]; then
+      if ( ! greater_version $OLD_MINOR_VERSION $MIN_VERSION ) || ( ! greater_version $OLD_CHART_MINOR_VERSION $CHART_MIN_VERSION ); then
+        notify "It seems you are upgrading the GitLab Helm Chart from ${OLD_CHART_VERSION_STRING} (GitLab ${OLD_VERSION_STRING}) to ${CHART_VERSION} (GitLab ${GITLAB_VERSION})."
+        notify "It is required to upgrade to the last minor version in a major version series"
+        notify "first before jumping to the next major version."
+        notify "Please follow the upgrade documentation at https://docs.gitlab.com/charts/releases/3_0.html"
+        notify "and upgrade to GitLab Helm Chart version 2.6.0 before upgrading to ${CHART_VERSION}."
+        exit 1
+      fi
+    fi
+---
+# Source: gitlab/templates/upgrade_check_hook.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gitlab-gitlab-upgrade-check
+  namespace: default
+  labels:
+    app: gitlab
+    chart: gitlab-3.2.1
+    release: gitlab
+    heritage: Helm
+    
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: gitlab
+        release: gitlab
+    spec:
+      securityContext:
+        runAsUser: 65534
+        fsGroup: 65534
+      restartPolicy: Never
+      
+      containers:
+        - name: run-check
+          image: "busybox:latest"
+          command: ['/bin/sh', '/scripts/runcheck']
+          
+          env:
+            - name: GITLAB_VERSION
+              value: '12.9.1'
+            - name: CHART_VERSION
+              value: '3.2.1'
+          volumeMounts:
+            - name: chart-info
+              mountPath: /chart-info
+            - name: scripts
+              mountPath: /scripts
+            - name: postgresql-secret
+              mountPath: /etc/secrets/postgresql
+          resources:
+            requests:
+              cpu: 50m
+      volumes:
+      - name: chart-info
+        configMap:
+          name: gitlab-gitlab-chart-info
+          optional: true
+      - name: scripts
+        configMap:
+          name: gitlab-gitlab-upgrade-check
+      - name: postgresql-secret
+        secret:
+          secretName: "gitlab-postgresql-password"
+          optional: true
+---
+# Source: gitlab/charts/shared-secrets/templates/rbac-config.yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: gitlab-shared-secrets
+  namespace: default
+  labels:
+    app: shared-secrets
+    chart: shared-secrets-0.1.0
+    release: gitlab
+    heritage: Helm
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "create", "patch"]
+---
+# Source: gitlab/charts/shared-secrets/templates/rbac-config.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gitlab-shared-secrets
+  namespace: default
+  labels:
+    app: shared-secrets
+    chart: shared-secrets-0.1.0
+    release: gitlab
+    heritage: Helm
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gitlab-shared-secrets
+subjects:
+  - kind: ServiceAccount
+    name: gitlab-shared-secrets
+    namespace: default
+---
+# Source: gitlab/charts/shared-secrets/templates/rbac-config.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gitlab-shared-secrets
+  namespace: default
+  labels:
+    app: shared-secrets
+    chart: shared-secrets-0.1.0
+    release: gitlab
+    heritage: Helm
+    
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+---
+# Source: gitlab/charts/gitlab/charts/unicorn/templates/tests/test-runner.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: gitlab-unicorn-test-runner-w7q67
+  namespace: default
+  annotations:
+    "helm.sh/hook": test-success
+spec:
+  containers:
+  - name: test-runner
+    image: registry.gitlab.com/gitlab-org/build/cng/gitlab-webservice-ce:v12.9.1
+    command: ['sh', '/tests/test_login']
+    volumeMounts:
+      - name: tests
+        mountPath: '/tests'
+      - name: root-password
+        readOnly: true
+        mountPath: /initial_root_password
+        subPath: initial_root_password
+  volumes:
+  - name: tests
+    configMap:
+      name: gitlab-unicorn-tests
+  - name: root-password
+    secret:
+      secretName: "gitlab-gitlab-initial-root-password"
+      items:
+        - key: "password"
+          path: initial_root_password
+  restartPolicy: Never
+---
+# Source: gitlab/charts/shared-secrets/templates/self-signed-cert-job.yml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gitlab-shared-secrets.1-vg8-selfsign
+  namespace: default
+  labels:
+    app: shared-secrets
+    chart: shared-secrets-0.1.0
+    release: gitlab
+    heritage: Helm
+    
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+spec:
+  template:
+    metadata:
+      labels:
+        app: shared-secrets
+        release: gitlab
+    spec:
+      securityContext:
+        runAsUser: 65534
+        fsGroup: 65534
+      serviceAccountName: gitlab-shared-secrets
+      restartPolicy: Never
+      
+      initContainers:
+      - name: cfssl-self-sign
+        image: "registry.gitlab.com/gitlab-org/build/cng/cfssl-self-sign:1.2"
+        env:
+        - name: CA_SUBJECT
+          value: "GitLab Helm Chart" # defaults to GitLab in container
+        - name: CA_ORG
+          value: "default" # defaults to GitLab in container
+        - name: CA_ORG_UNIT
+          value: "gitlab" # defaults to Cloud Native in container
+        - name: CERT_SUBJECT
+          value: "ithub.space" # defaults to GitLab in container
+        - name: CERT_DOMAIN
+          value: "ithub.space" # defaults to example.com in container
+        - name: EXPIRY
+          value: "365d" # defaults to 8076h in container
+        - name: ALGORITHM
+          value: "rsa" # defaults to ecdsa in container
+        - name: KEY_SIZE
+          value: "4096" # defaults to 256 inside container
+        volumeMounts:
+        - name: certs-path
+          mountPath: /output
+        resources:
+          requests:
+            cpu: 50m
+      containers:
+      - name: kubectl
+        image: "registry.gitlab.com/gitlab-org/build/cng/kubectl:1.13.12"
+        command:
+        - /bin/bash
+        - -exc
+        - |
+          certname=gitlab-wildcard-tls
+          # create wildcard certificate secret
+          kubectl create secret tls $certname \
+            --cert=/output/wildcard.pem --key=/output/wildcard-key.pem || true
+          kubectl --namespace=$namespace label \
+            secret $certname  $(echo 'app.kubernetes.io/name=gitlab' | sed -E 's/=[^ ]*/-/g')
+          kubectl --namespace=$namespace label --overwrite \
+            secret $certname app=shared-secrets chart=shared-secrets-0.1.0 release=gitlab heritage=Helm 
+          # create CA certificate secret
+          kubectl create secret generic ${certname}-ca \
+            --from-file=cfssl_ca=/output/ca.pem || true
+          kubectl --namespace=$namespace label \
+            secret ${certname}-ca  $(echo 'app.kubernetes.io/name=gitlab' | sed -E 's/=[^ ]*/-/g')
+          kubectl --namespace=$namespace label --overwrite \
+            secret ${certname}-ca app=shared-secrets chart=shared-secrets-0.1.0 release=gitlab heritage=Helm 
+        volumeMounts:
+        - name: certs-path
+          mountPath: /output
+        resources:
+          requests:
+            cpu: 50m
+      volumes:
+      - name: certs-path
+        emptyDir: {}
 ---
 # Source: gitlab/charts/shared-secrets/templates/configmap.yaml
 apiVersion: v1
@@ -5470,7 +5522,7 @@ data:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: gitlab-shared-secrets.1-w9q
+  name: gitlab-shared-secrets.1-tx6
   namespace: default
   labels:
     app: shared-secrets
@@ -5492,7 +5544,8 @@ spec:
         runAsUser: 65534
         fsGroup: 65534
       serviceAccountName: gitlab-shared-secrets
-      restartPolicy: Never      
+      restartPolicy: Never
+      
       containers:
         - name: shared-secrets
           image: "registry.gitlab.com/gitlab-org/build/cng/kubectl:1.13.12"
@@ -5512,253 +5565,3 @@ spec:
           name: gitlab-shared-secrets
       - name: ssh
         emptyDir: {}
----
-# Source: gitlab/charts/gitlab/charts/unicorn/templates/tests/test-runner.yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: gitlab-unicorn-test-runner-blzv9
-  namespace: default
-  annotations:
-    "helm.sh/hook": test-success
-spec:
-  containers:
-  - name: test-runner
-    image: registry.gitlab.com/gitlab-org/build/cng/gitlab-unicorn-ce:v12.8.7
-    command: ['sh', '/tests/test_login']
-    volumeMounts:
-      - name: tests
-        mountPath: '/tests'
-      - name: root-password
-        readOnly: true
-        mountPath: /initial_root_password
-        subPath: initial_root_password
-  volumes:
-  - name: tests
-    configMap:
-      name: gitlab-unicorn-tests
-  - name: root-password
-    secret:
-      secretName: "gitlab-gitlab-initial-root-password"
-      items:
-        - key: "password"
-          path: initial_root_password
-  restartPolicy: Never
----
-# Source: gitlab/templates/upgrade_check_hook.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gitlab-gitlab-upgrade-check
-  namespace: default
-  labels:
-    app: gitlab
-    chart: gitlab-3.1.5
-    release: gitlab
-    heritage: Helm
-    
-  annotations:
-    "helm.sh/hook": pre-upgrade
-    "helm.sh/hook-weight": "-11"
-    "helm.sh/hook-delete-policy": before-hook-creation
-data:
-  runcheck: |
-    #!/bin/sh
-    
-    set -e
-    
-    notify() {
-      echo "$1"
-      echo -n "$1 " >> /dev/termination-log
-    }
-    
-    greater_version()
-    {
-      test "$(printf '%s\n' "$@" | sort -V | tail -n 1)" = "$1";
-    }
-    
-    # For the PostgreSQL upgrade, you either need both secrets, or no secrets.
-    # If there are no secrets, we will create them for you.
-    # If the secrets aren't in either of these states, we assume you are upgrading from an older version
-    # This is running ahead of version checks to ensure this always runs. This is to account for
-    # installations outside of the official helm repo.
-    secrets_dir="/etc/secrets/postgresql"
-    if [ -d "${secrets_dir}" ]; then
-      if [ ! "$(ls -A ${secrets_dir}/..data/)" = "" ]; then
-        if [ ! -f "${secrets_dir}/postgresql-postgres-password" ] || [ ! -f "${secrets_dir}/postgresql-password" ]; then
-          notify "You seem to be upgrading from a previous version of GitLab using the bundled PostgreSQL chart"
-          notify "There are some manual steps which need to be performed in order to upgrade the database"
-          notify "Please see the upgrade documentation for instructions on how to proceed:"
-          notify "https://docs.gitlab.com/charts/installation/upgrade.html"
-          exit 1
-        fi
-      fi
-    fi
-    MIN_VERSION=12.6
-    CHART_MIN_VERSION=2.6
-    
-    # Only run check for semver releases
-    if ! awk 'BEGIN{exit(!(ARGV[1] ~ /^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/))}' "$GITLAB_VERSION"; then
-      exit 0
-    fi
-    
-    NEW_MAJOR_VERSION=$(echo $GITLAB_VERSION | awk -F "." '{print $1}')
-    NEW_MINOR_VERSION=$(echo $GITLAB_VERSION | awk -F "." '{print $1"."$2}')
-    
-    NEW_CHART_MAJOR_VERSION=$(echo $CHART_VERSION | awk -F "." '{print $1}')
-    NEW_CHART_MINOR_VERSION=$(echo $CHART_VERSION | awk -F "." '{print $1"."$2}')
-    
-    if [ ! -f /chart-info/gitlabVersion ]; then
-      notify "It seems you are attempting an unsupported upgrade path."
-      notify "Please follow the upgrade documentation at https://docs.gitlab.com/ee/policy/maintenance.html#upgrade-recommendations"
-      exit 1
-    fi
-    
-    OLD_VERSION_STRING=$(cat /chart-info/gitlabVersion)
-    OLD_CHART_VERSION_STRING=$(cat /chart-info/gitlabChartVersion)
-    
-    # Skip check if old version wasn't semver
-    if ! awk 'BEGIN{exit(!(ARGV[1] ~ /^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/))}' "$OLD_VERSION_STRING"; then
-      exit 0
-    fi
-    
-    OLD_MAJOR_VERSION=$(echo $OLD_VERSION_STRING | awk -F "." '{print $1}')
-    OLD_MINOR_VERSION=$(echo $OLD_VERSION_STRING | awk -F "." '{print $1"."$2}')
-    OLD_CHART_MAJOR_VERSION=$(echo $OLD_CHART_VERSION_STRING | awk -F "." '{print $1}')
-    OLD_CHART_MINOR_VERSION=$(echo $OLD_CHART_VERSION_STRING | awk -F "." '{print $1"."$2}')
-    
-    # Checking Version
-    # (i) if it is a major version jump
-    # (ii) if existing version is less than required minimum version
-    if [ ${OLD_MAJOR_VERSION} -lt ${NEW_MAJOR_VERSION} ] || [ ${OLD_CHART_MAJOR_VERSION} -lt ${NEW_CHART_MAJOR_VERSION} ]; then
-      if ( ! greater_version $OLD_MINOR_VERSION $MIN_VERSION ) || ( ! greater_version $OLD_CHART_MINOR_VERSION $CHART_MIN_VERSION ); then
-        notify "It seems you are upgrading the GitLab Helm Chart from ${OLD_CHART_VERSION_STRING} (GitLab ${OLD_VERSION_STRING}) to ${CHART_VERSION} (GitLab ${GITLAB_VERSION})."
-        notify "It is required to upgrade to the last minor version in a major version series"
-        notify "first before jumping to the next major version."
-        notify "Please follow the upgrade documentation at https://docs.gitlab.com/charts/releases/3_0.html"
-        notify "and upgrade to GitLab Helm Chart version 2.6.0 before upgrading to ${CHART_VERSION}."
-        exit 1
-      fi
-    fi
----
-# Source: gitlab/templates/upgrade_check_hook.yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: gitlab-gitlab-upgrade-check
-  namespace: default
-  labels:
-    app: gitlab
-    chart: gitlab-3.1.5
-    release: gitlab
-    heritage: Helm
-    
-  annotations:
-    "helm.sh/hook": pre-upgrade
-    "helm.sh/hook-weight": "-10"
-    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
-spec:
-  backoffLimit: 2
-  template:
-    metadata:
-      labels:
-        app: gitlab
-        release: gitlab
-    spec:
-      securityContext:
-        runAsUser: 65534
-        fsGroup: 65534
-      restartPolicy: Never      
-      containers:
-        - name: run-check
-          image: "busybox:latest"
-          command: ['/bin/sh', '/scripts/runcheck']
-          
-          env:
-            - name: GITLAB_VERSION
-              value: '12.8.7'
-            - name: CHART_VERSION
-              value: '3.1.5'
-          volumeMounts:
-            - name: chart-info
-              mountPath: /chart-info
-            - name: scripts
-              mountPath: /scripts
-            - name: postgresql-secret
-              mountPath: /etc/secrets/postgresql
-          resources:
-            requests:
-              cpu: 50m
-      volumes:
-      - name: chart-info
-        configMap:
-          name: gitlab-gitlab-chart-info
-          optional: true
-      - name: scripts
-        configMap:
-          name: gitlab-gitlab-upgrade-check
-      - name: postgresql-secret
-        secret:
-          secretName: "gitlab-postgresql-password"
-          optional: true
----
-# Source: gitlab/charts/shared-secrets/templates/rbac-config.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: gitlab-shared-secrets
-  namespace: default
-  labels:
-    app: shared-secrets
-    chart: shared-secrets-0.1.0
-    release: gitlab
-    heritage: Helm
-    
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-weight": "-5"
-    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
----
-# Source: gitlab/charts/shared-secrets/templates/rbac-config.yaml
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: gitlab-shared-secrets
-  namespace: default
-  labels:
-    app: shared-secrets
-    chart: shared-secrets-0.1.0
-    release: gitlab
-    heritage: Helm
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-weight": "-5"
-    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
-rules:
-- apiGroups: [""]
-  resources: ["secrets"]
-  verbs: ["get", "list", "create", "patch"]
----
-# Source: gitlab/charts/shared-secrets/templates/rbac-config.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: gitlab-shared-secrets
-  namespace: default
-  labels:
-    app: shared-secrets
-    chart: shared-secrets-0.1.0
-    release: gitlab
-    heritage: Helm
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-weight": "-5"
-    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: gitlab-shared-secrets
-subjects:
-  - kind: ServiceAccount
-    name: gitlab-shared-secrets
-    namespace: default

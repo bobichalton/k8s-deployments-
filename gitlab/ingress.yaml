@@ -34,7 +34,7 @@ spec:
   tls:
     - hosts:
       - minio.ithub.space
-      secretName: gitlab-minio-tls
+      secretName: gitlab-minio-prod-tls
 ---
 # Source: gitlab/charts/registry/templates/ingress.yaml
 apiVersion: extensions/v1beta1
@@ -72,4 +72,41 @@ spec:
   tls:
     - hosts:
       - registry.ithub.space
-      secretName: gitlab-registry-tls
+      secretName: gitlab-registry-prod-tls
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: gitlab-unicorn
+  namespace: default
+  labels:
+    app: unicorn
+    chart: unicorn-3.2.1
+    release: gitlab
+    heritage: Helm
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    ingress.kubernetes.io/hsts-preload: "true"
+spec:
+  rules:
+    - host: gitlab.ithub.space
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: gitlab-unicorn
+              servicePort: 8181
+          - path: /admin/sidekiq
+            backend:
+              serviceName: gitlab-unicorn
+              servicePort: 8080
+  tls:
+    - hosts:
+      - gitlab.ithub.space
+      secretName: gitlab-unicorn-prod-tls
