@@ -1,0 +1,24 @@
+apiVersion: extensions/v1beta1  
+kind: Ingress  
+metadata:  
+  name: grafana-ingress
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    ingress.kubernetes.io/hsts-include-subdomains: "true"
+    ingress.kubernetes.io/hsts-max-age: "315360000"
+    ingress.kubernetes.io/hsts-preload: "true"
+spec:  
+  rules:
+  - host: grafana.ithub.space
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: grafana-service
+          servicePort: 3000
+  tls:
+  - hosts:
+    - grafana.ithub.space
+    secretName: grafana-ithub-space-prod-tls
