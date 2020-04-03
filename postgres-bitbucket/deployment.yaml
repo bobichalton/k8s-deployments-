@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-bitbucket
+  labels:
+    app: postgres-bitbucket
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-bitbucket
+  template:
+    metadata:
+      labels:
+        app: postgres-bitbucket
+    spec:
+      containers:
+        - name: postgres-kong
+          image: postgres:9.6.17
+          resources:
+            requests:
+              cpu: 256m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2048Mi
+          ports:
+          - containerPort: 5432
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgresdb
+          env:
+          - name: "POSTGRES_DB"
+            value: "bitbucket"
+          - name: "POSTGRES_USER"
+            value: "bitbucket"
+          - name: "POSTGRES_PASSWORD"
+            value: "1p{m{xpMoE@nyu^"
+      volumes:
+        - name: postgresdb
+          persistentVolumeClaim:
+            claimName: postgres-bitbucket-pvc
