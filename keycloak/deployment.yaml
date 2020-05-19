@@ -24,8 +24,20 @@ spec:
           value: "LDMlND3mC9Y3bwSrZUTG"
         - name: KEYCLOAK_USER
           value: "admin"
+        - name: DB_VENDOR
+          value: "postgres"
         - name: PROXY_ADDRESS_FORWARDING
           value: "true"
+        - name: DB_ADDR
+          value: "postgres-keycloak-service"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_DATABASE
+          value: "keycloak"
+        - name: DB_USER
+          value: "keycloak"
+        - name: DB_PASSWORD
+          value: "rl:i1ViCHvrz2Mv]~Hy"
         ports:
         - name: http
           containerPort: 8080
